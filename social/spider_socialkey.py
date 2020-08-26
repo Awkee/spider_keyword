@@ -67,9 +67,10 @@ class SocialKey(object):
         for tr in tr_list[1:]:
             td_list = tr.xpath('./td')
             nid = td_list[0].xpath('string(.)').strip()
+            rank = int(nid)
             key = td_list[1].xpath('string(./a[@class="list-title"])').strip()
             score = td_list[3].xpath('string(.)').strip()
-            self.add_item(nid, key, 'baidu', 'social')
+            self.add_item(rank, key, 'baidu', 'social')
 
     def social_key_weibo_hot_topic(self):
         '''微博热搜话题榜'''
@@ -86,9 +87,9 @@ class SocialKey(object):
             a_list = a_list.split()[0:-1]
             items = re.findall(r'([0-9]*?)(#.*?#).*阅读数:(.*(?:万|亿))?(?:,主持人:)?(.*)?', '\n'.join(a_list))
             for item in items:
-                nid = int(item[0])
+                rank = int(item[0])
                 key = item[1]
-                self.add_item(nid, key, 'weibo', 'social')
+                self.add_item(rank, key, 'weibo', 'social')
 
     def social_key_weibo_hot_realtime(self):
         '''微博热搜榜'''
@@ -100,6 +101,7 @@ class SocialKey(object):
         tr_list = selector.xpath('//div[@id="pl_top_realtimehot"]/table/tbody/tr')
         for tr in tr_list[1:]:
             rank = tr.xpath('./td[1]/text()').get()
+            rank = int(rank)
             hotword = tr.xpath('./td[2]/a/text()').get()
             search_num = tr.xpath('./td[2]/span/text()').get()
             self.add_item(rank, hotword, 'weibo', 'social')
