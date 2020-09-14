@@ -4,7 +4,7 @@
 # Author: zioer
 # mail: xiaoyu0720@gmail.com
 # Created Time: 2020年08月26日 星期三 12时53分25秒
-# Brief: 
+# Brief:
 ################################################################################
 import requests
 from lxml import etree
@@ -19,7 +19,8 @@ HEADERS_PC = {
 }
 # MongoDB config
 DEFAULT_MONGO_URI = 'mongodb://myTestUser:abcd1234@localhost:27017/keywords'
-DEFAULT_WEIBO_COOKIE = 'SUB=_2AkMoGCnzf8NxqwJRmf8QzWjkbol3zgzEieKeRNgoJRMxHRl-yT9jqkM5tRB6A5gHHGlll66nBhQKS-cig_GPibaICo5Z; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9WF70N0ypJucppYCyTVSmvZo; login_sid_t=72d0d19dda405cc237b42b6d95b256c3; cross_origin_proto=SSL; _s_tentry=passport.weibo.com; Apache=1136604738481.4927.1598334665588; SINAGLOBAL=1136604738481.4927.1598334665588; ULV=1598334665592:1:1:1:1136604738481.4927.1598334665588:; TC-Page-G0=62b98c0fc3e291bc0c7511933c1b13ad|1598335214|1598335126'
+DEFAULT_WEIBO_COOKIE = r'UM_distinctid=17468324a24b8e-0b277c780614b3-1d251809-1f7442-17468324a25d0e; SINAGLOBAL=6818766575328.816.1599489278592; SUB=_2AkMoA6LDf8NxqwJRmf8Xy2_naYlxyQDEieKeX1MYJRMxHRl-yT9kqm9ZtRB6A4OMLH2UeyOP91xt8tRacWkIqgbxJvYu; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W5i9sLvopsCIVR.-7UzRDLN; login_sid_t=44de1e4cdbb8b243072d58728cc22e51; cross_origin_proto=SSL; _s_tentry=passport.weibo.com; Apache=9245615733765.613.1600073207524; ULV=1600073207537:2:2:2:9245615733765.613.1600073207524:1599489279528; CNZZDATA1272960323=342704353-1600071974-%7C1600071974; TC-Page-G0=62b98c0fc3e291bc0c7511933c1b13ad|1600073353|1600073198'
+
 
 class SocialKey(object):
     '''
@@ -47,6 +48,7 @@ class SocialKey(object):
         item['platform'] = platform
         item['type'] = ptype
         item['timestamp'] = timestamp
+        print('item:', item)
         self.keyword_list.append(item)
 
     def get_headers(self, ptype=None):
@@ -76,13 +78,13 @@ class SocialKey(object):
         '''微博热搜话题榜'''
         headers = self.get_headers('weibo')
         url_home = 'https://d.weibo.com/231650'
-        for page in range(1,6):
-            url = f'{url_home}??cfs=920&Pl_Discover_Pt6Rank__3_filter=&Pl_Discover_Pt6Rank__3_page={page}' 
-            resp = requests.get(url, headers = headers)
+        for page in range(1, 6):
+            url = f'{url_home}??cfs=920&Pl_Discover_Pt6Rank__3_filter=&Pl_Discover_Pt6Rank__3_page={page}'
+            resp = requests.get(url, headers=headers)
             res_list = re.findall(r'"html":"(.*)"}\)</script>', resp.text)
             result = res_list[-1]
 
-            a_list = re.sub(r'<.*?>|\\r|\\n|\\t|上一页|下一页|TOP', '' , result)
+            a_list = re.sub(r'<.*?>|\\r|\\n|\\t|上一页|下一页|TOP', '', result)
             a_list = re.sub('\s*?主持人', ',主持人', a_list)
             a_list = a_list.split()[0:-1]
             items = re.findall(r'([0-9]*?)(#.*?#).*阅读数:(.*(?:万|亿))?(?:,主持人:)?(.*)?', '\n'.join(a_list))
@@ -95,8 +97,8 @@ class SocialKey(object):
         '''微博热搜榜'''
         headers = self.get_headers('weibo')
 
-        url='https://s.weibo.com/top/summary?cate=realtimehot'
-        resp = requests.get(url, headers = headers)
+        url = 'https://s.weibo.com/top/summary?cate=realtimehot'
+        resp = requests.get(url, headers=headers)
         selector = Selector(resp.text)
         tr_list = selector.xpath('//div[@id="pl_top_realtimehot"]/table/tbody/tr')
         for tr in tr_list[1:]:
@@ -109,7 +111,7 @@ class SocialKey(object):
     def save_to_mongo(self):
         '''数据保存到MongoDB'''
         return self.doc.insert_many(self.keyword_list)
-    
+
     def process(self):
         '''任务处理'''
         self.social_key_baidu()
