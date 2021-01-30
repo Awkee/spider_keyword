@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-################################################################################
+###############################################################################
 # Author: zioer
 # mail: xiaoyu0720@gmail.com
 # Created Time: 2020年08月26日 星期三 12时53分25秒
 # Brief:
-################################################################################
+###############################################################################
 import requests
 from lxml import etree
 from datetime import datetime
@@ -20,6 +20,13 @@ HEADERS_PC = {
 # MongoDB config
 DEFAULT_MONGO_URI = 'mongodb://myTestUser:abcd1234@localhost:27017/keywords'
 DEFAULT_WEIBO_COOKIE = r'UM_distinctid=17468324a24b8e-0b277c780614b3-1d251809-1f7442-17468324a25d0e; SINAGLOBAL=6818766575328.816.1599489278592; SUB=_2AkMoA6LDf8NxqwJRmf8Xy2_naYlxyQDEieKeX1MYJRMxHRl-yT9kqm9ZtRB6A4OMLH2UeyOP91xt8tRacWkIqgbxJvYu; SUBP=0033WrSXqPxfM72-Ws9jqgMF55529P9D9W5i9sLvopsCIVR.-7UzRDLN; login_sid_t=44de1e4cdbb8b243072d58728cc22e51; cross_origin_proto=SSL; _s_tentry=passport.weibo.com; Apache=9245615733765.613.1600073207524; ULV=1600073207537:2:2:2:9245615733765.613.1600073207524:1599489279528; CNZZDATA1272960323=342704353-1600071974-%7C1600071974; TC-Page-G0=62b98c0fc3e291bc0c7511933c1b13ad|1600073353|1600073198'
+
+default_socks = 'socks5://127.0.0.1:1084'
+
+proxies = {
+    'http': default_socks,
+    'https': default_socks,
+}
 
 
 class SocialKey(object):
@@ -63,7 +70,7 @@ class SocialKey(object):
     def social_key_baidu(self):
         '''百度热搜关键词'''
         url = 'http://top.baidu.com/buzz?b=1'
-        resp = requests.get(url, headers=self.get_headers())
+        resp = requests.get(url, headers=self.get_headers(), proxies=proxies)
         doc = etree.HTML(resp.content.decode('gb2312'))
         tr_list = doc.xpath(r'//*[@id="main"]/div[2]/div/table/tr[not(contains(@class, "item-tr"))]')
         for tr in tr_list[1:]:
@@ -71,7 +78,6 @@ class SocialKey(object):
             nid = td_list[0].xpath('string(.)').strip()
             rank = int(nid)
             key = td_list[1].xpath('string(./a[@class="list-title"])').strip()
-            score = td_list[3].xpath('string(.)').strip()
             self.add_item(rank, key, 'baidu', 'social')
 
     def social_key_weibo_hot_topic(self):
@@ -80,7 +86,7 @@ class SocialKey(object):
         url_home = 'https://d.weibo.com/231650'
         for page in range(1, 6):
             url = f'{url_home}??cfs=920&Pl_Discover_Pt6Rank__3_filter=&Pl_Discover_Pt6Rank__3_page={page}'
-            resp = requests.get(url, headers=headers)
+            resp = requests.get(url, headers=headers, proxies=proxies)
             res_list = re.findall(r'"html":"(.*)"}\)</script>', resp.text)
             result = res_list[-1]
 
@@ -98,7 +104,7 @@ class SocialKey(object):
         headers = self.get_headers('weibo')
 
         url = 'https://s.weibo.com/top/summary?cate=realtimehot'
-        resp = requests.get(url, headers=headers)
+        resp = requests.get(url, headers=headers, proxies=proxies)
         selector = Selector(resp.text)
         tr_list = selector.xpath('//div[@id="pl_top_realtimehot"]/table/tbody/tr')
         for tr in tr_list[1:]:
